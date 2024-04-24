@@ -1,0 +1,93 @@
+﻿@page
+@model QuizzApplication.Pages.ScoreModel
+@{
+    ViewData["Title"] = "Quiz Result";
+}
+
+<style>
+    .question-result {
+        margin-bottom: 20px;
+        padding-left: 10px;
+        border-bottom: 1px solid #8a2be2;
+    }
+
+    #back-to-home-btn {
+        text-decoration: none;
+        color: black;
+        border-radius: 5px;
+        border: 2px solid black;
+        padding: 6px;
+        background-color: transparent;
+        transition: transform 0.2s;
+        &:hover
+        {
+            background: whitesmoke;
+            transform: scale(1.1);
+        }
+
+    }
+
+    #score-heading {
+        display: flex;
+        gap: 20px;
+    }
+
+    #results-container {
+        margin-top: 10px;
+        padding: 20px;
+        background: whitesmoke;
+        border-radius: 10px;
+    }
+
+</style>
+
+<div id="score-heading">
+    <h2>Your Quiz Result</h2>
+    <a id="back-to-home-btn" href="/Index">&#8592; Back to Homepage</a>
+</div>
+<br />
+<div id="results-container">
+    @foreach (var result in Model.Results)
+    {
+        <div class="question-result">
+            <p style="font-weight: bold;">@result.QuestionContent</p>
+            @if (result.UserAnswer != null)
+            {
+                <p>You selected: @result.UserAnswer</p>
+            } else
+            {
+                <p>No answer provided.</p>
+            }
+            @if (result.IsCorrect)
+            {
+                <p style="color: green;">Well done!</p>
+            }
+            else
+            {
+                <p style="color: red;">Incorrect. The correct answer is: @result.CorrectAnswer</p>
+            }
+        </div>
+    }
+</div>
+<br />
+<p style="font-size: 1.5em;">Your final score: @Model.Score/@Model.TotalQuestions</p>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<script>
+    $(document).ready(function () {
+        var score = @Model.Score;
+        var totalQuestions = @Model.TotalQuestions;
+        var percentage = (score / totalQuestions) * 100;
+
+        if (percentage >= 80) {
+            alert("Congratulations! You scored " + percentage + "%. You are a quiz master!");
+        }
+        else if (percentage >= 60) {
+            alert("Not bad! You scored " + percentage + "%. Keep practicing!");
+        }
+        else {
+            alert("You scored " + percentage + "%. Better luck next time!");
+        }
+    });
+
+</script>

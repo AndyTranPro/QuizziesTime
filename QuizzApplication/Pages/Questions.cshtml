@@ -1,0 +1,330 @@
+﻿@page
+@model QuizzApplication.Pages.QuestionsModel
+@{
+    ViewData["Title"] = "Question Management";
+}
+
+<style>
+    .editBtn {
+        margin-left: 2px;
+        border: none;
+        background-color: transparent;
+        color: black;
+    }
+    .question-item {
+        transition: transform 0.3s ease;
+        &:hover {
+            cursor: pointer;
+            background: whitesmoke;
+            transform: scale(1.04);
+        }
+    }
+    .text-danger {
+        font-style: italic;
+    }
+    .close {
+        border-radius: 5px;
+        background-color: red;
+        font-size: 20px;
+        color: white;
+        border: none;
+    }
+
+    #buttons-container {
+        display: flex;
+        gap: 10px;
+    }
+    #back-to-home-btn {
+        text-decoration: none;
+        color: black;
+        border-radius: 5px;
+        border: 2px solid black;
+        padding: 6px;
+        background-color: transparent;
+        transition: transform 0.2s;
+        &:hover
+        {
+            background: whitesmoke;
+            transform: scale(1.1);
+        }
+    }
+
+    #questions-container {
+        border: 2px solid #8a2be2;
+        border-radius: 10px;
+        padding: 40px;
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+
+    .action-button {
+        cursor: pointer;
+        border: 2px solid black;
+        background-color: transparent;
+        border-radius: 5px;
+        transition: transform 0.2s;
+        &:hover
+        {
+            background: whitesmoke;
+            transform: scale(1.1);
+        }
+
+    }
+
+</style>
+
+<h2>Questions Management</h2>
+<br />
+<div id="buttons-container">
+    <button class="action-button" id="create-question-btn" data-toggle="modal" data-target="#createModal">Add New Question</button>
+    <a id="back-to-home-btn" href="/Index">&#8592; Back to Homepage</a>
+</div>
+<br /><br />
+<div id="questions-container">
+    <table id="questions-table" class="table">
+        <thead>
+            <tr>
+                <th>Questions</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var question in Model.Questions)
+            {
+                <tr class="question-item">
+                    <td>@question.Content</td>
+                    <td>
+                        <button class="editBtn btn btn-primary" data-toggle="modal" data-target="#editModal"
+                                data-id="@question.QuestionId"
+                                data-content="@question.Content"
+                                data-option1="@question.Option1"
+                                data-option2="@question.Option2"
+                                data-option3="@question.Option3"
+                                data-option4="@question.Option4"
+                                data-answer="@question.CorrectAnswer">
+                            Edit
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+<script>
+    $('#create-question-btn').click(function () {
+        // reset the values in the modal
+        $('#questionContent').val('');
+        $('#questionOption1').val('');
+        $('#questionOption2').val('');
+        $('#questionOption3').val('');
+        $('#questionOption4').val('');
+        $('#questionCorrectAnswer').val('');
+
+        // clear the error messages
+        $('.form-control').each(function () {
+            $(this).next('.text-danger').text('');
+        });
+        $('#questionCorrectAnswer').next('.text-danger').text('');
+    });
+
+
+    $('.editBtn').click(function () {
+        // Retrieve data attributes
+        var id = $(this).data('id');
+        var content = $(this).data('content');
+        var option1 = $(this).data('option1');
+        var option2 = $(this).data('option2');
+        var option3 = $(this).data('option3');
+        var option4 = $(this).data('option4');
+        var answer = $(this).data('answer');
+
+        // Set the values in the modal
+        $('#editId').val(id);
+        $('#editContent').val(content);
+        $('#editOption1').val(option1);
+        $('#editOption2').val(option2);
+        $('#editOption3').val(option3);
+        $('#editOption4').val(option4);
+        $('#editCorrectAnswer').val(answer);
+
+        // Update form action
+        $('#editForm').attr('action', '/Questions?handler=Update&id=' + id);
+
+        // Set up validation for the edit modal's input fields
+        $('#editModal input[type="text"]').on('input', function () {
+            validateField($(this));
+        });
+
+        // Submit event for Edit Form
+        $('#editModal form').on('submit', function (event) {
+            if (!validateForm($(this))) {
+                event.preventDefault();
+            }
+        });
+    });
+
+    $(document).ready(function () {
+        // Trim all text inputs before submission
+        $('form').on('submit', function () {
+            $(this).find('input[type="text"]').each(function () {
+                $(this).val($.trim($(this).val()));
+            });
+        });
+        // Bind input validation to all text fields within modals
+        $('#createModal input[type="text"]').on('input', function () {
+            validateField($(this));
+        });
+
+        // Submit event for Create Form
+        $('#createModal form').on('submit', function (event) {
+            if (!validateForm($(this))) {
+                event.preventDefault();
+            }
+        });
+    });
+
+    function validateField(input) {
+        let value = input.val().trim();
+        let errorMessage = '';
+
+        if (value === '') {
+            errorMessage = 'This field is required.';
+        }
+
+        input.next('.text-danger').text(errorMessage);
+    }
+    function validateForm(form, event) {
+        let isValid = true;
+        let options = [];
+        form.find('.form-control').each(function () {
+            if ($(this).val().trim() === '') {
+                $(this).next('.text-danger').text('This field is required.');
+                isValid = false;
+            } else {
+                $(this).next('.text-danger').text('');
+                if (this.id.includes('Option')) {
+                    options.push($(this).val().trim());
+                }
+            }
+        });
+
+        let correctAnswerInput = form.find('[name="Question.CorrectAnswer"]');
+        let correctAnswer = correctAnswerInput.val().trim();
+        if (!options.includes(correctAnswer)) {
+            correctAnswerInput.next('.text-danger').text('Correct answer must match one of the options.');
+            isValid = false;
+        } else {
+            correctAnswerInput.next('.text-danger').text('');
+        }
+
+        return isValid;
+    }
+</script>
+
+<!-- Bootstrap Modal -->
+<div class="modal fade" id="createModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="CreateModalLabel">Add a new question</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method="post">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="questionContent">Content</label>
+                        <input type="text" class="form-control" id="questionContent" name="Question.Content">
+                        <span class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="questionOption1">Option 1</label>
+                        <input type="text" class="form-control" id="questionOption1" name="Question.Option1">
+                        <span class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="questionOption2">Option 2</label>
+                        <input type="text" class="form-control" id="questionOption2" name="Question.Option2">
+                        <span class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="questionOption3">Option 3</label>
+                        <input type="text" class="form-control" id="questionOption3" name="Question.Option3">
+                        <span class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="questionOption4">Option 4</label>
+                        <input type="text" class="form-control" id="questionOption4" name="Question.Option4">
+                        <span class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="questionCorrectAnswer">Answer</label>
+                        <input type="text" class="form-control" id="questionCorrectAnswer" name="Question.CorrectAnswer">
+                        <span class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border: none">
+                    <button type="submit" class="btn btn-primary">Add this question</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="EditModalLabel">Edit Question</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="editForm" method="post" asp-page-handler="Update">
+                <input type="hidden" class="form-control" id="editId" name="Question.QuestionId">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="questionContent">Content</label>
+                        <input type="text" class="form-control" id="editContent" name="Question.Content">
+                        <span class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="questionOption1">Option 1</label>
+                        <input type="text" class="form-control" id="editOption1" name="Question.Option1">
+                        <span class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="questionOption2">Option 2</label>
+                        <input type="text" class="form-control" id="editOption2" name="Question.Option2">
+                        <span class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="questionOption3">Option 3</label>
+                        <input type="text" class="form-control" id="editOption3" name="Question.Option3">
+                        <span class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="questionOption4">Option 4</label>
+                        <input type="text" class="form-control" id="editOption4" name="Question.Option4">
+                        <span class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="questionCorrectAnswer">Answer</label>
+                        <input type="text" class="form-control" id="editCorrectAnswer" name="Question.CorrectAnswer">
+                        <span class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border: none;">
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+

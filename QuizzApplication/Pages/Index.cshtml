@@ -1,0 +1,45 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+
+<style>
+    #home-content {
+        background: linear-gradient(to right, #74ebd5, #acb6e5);
+        padding: 150px;
+        height: 80%;
+        width: 100%;
+    }
+
+    #buttons-container {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+    }
+
+    .navigating-button {
+        cursor: pointer;
+        background: linear-gradient(to bottom left, #8a2be2, #da70d6);
+        color: white;
+        border: none;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        transition: transform 0.2s;
+        &:hover {
+
+            color: white;
+            transform: scale(1.1);
+        }
+    }
+</style>
+
+<div id="home-content" class="text-center">
+    <h1 class="display-4" style="font-weight: bold">Welcome to the Quiz Application!</h1>
+    <h3>Test your knowledge with our quizzes.</h3>
+    <br />
+    <div id="buttons-container">
+        <a class="btn navigating-button" href="/Questions">Manage Questions</a>
+        <a class="btn navigating-button" href="/Quiz">Take a Quiz</a>
+    </div>
+</div>

@@ -1,0 +1,102 @@
+﻿@page
+@model QuizzApplication.Pages.QuizModel
+@{
+    ViewData["Title"] = "Quiz";
+}
+
+<h2>Quiz Time! Remaining: <span style="color: blue" id="time"></span></h2>
+<br />
+<style>
+    @@keyframes blink {
+        50% { opacity: 0.5; }
+    }
+    .blink {
+        animation: blink 1s step-start infinite;
+    }
+
+    #quiz-body {
+        background: whitesmoke;
+        padding: 30px;
+        border-radius: 10px;
+    }
+
+    .quiz-question-content {
+        border-bottom: 1px solid black;
+        padding-bottom: 15px;
+    }
+
+</style>
+<div id="quiz-body">
+    <form method="post">
+        @foreach (var question in Model.Questions)
+        {
+            <div class="quiz-question-content">
+                <p>@question.Content</p>
+                <input type="radio" name="@question.QuestionId" value="@question.Option1" /> @question.Option1
+                <br />
+                <input type="radio" name="@question.QuestionId" value="@question.Option2" /> @question.Option2
+                <br />
+                <input type="radio" name="@question.QuestionId" value="@question.Option3" /> @question.Option3
+                <br />
+                <input type="radio" name="@question.QuestionId" value="@question.Option4" /> @question.Option4
+                <br />
+            </div>
+            <br />
+        }
+        <button type="submit" class="btn btn-success">Submit Answers</button>
+    </form>
+</div>
+<br />
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            var timeLimit = 6; // Time limit in minutes
+            var warningTime = 5; // Time in minutes when the warning starts
+            var criticalTime = 1; // Time in minutes when critical warning starts
+
+            var startTime = new Date('@TempData["startTime"]');
+            var endTime = new Date(startTime.getTime() + timeLimit * 60000);
+
+            var timerElement = document.getElementById("time");
+
+            var x = setInterval(function () {
+                var now = new Date().getTime();
+                var distance = endTime - now;
+
+                var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                timerElement.innerHTML = minutes + "m " + seconds + "s ";
+
+                // Change timer color to red in the last 5 minutes
+                if (minutes < warningTime) {
+                    timerElement.style.color = 'red';
+                    // add a blinking effect
+                    if (minutes < criticalTime) {
+                        timerElement.style.fontWeight = 'bold';
+                        timerElement.classList.add('blink');
+                    }
+                }
+
+                // Alert user at specific intervals
+                if (minutes === 5 && seconds === 0) {
+                    alert("Only 5 minutes left!");
+                }
+                if (minutes === 1 && seconds === 0) {
+                    alert("Only 1 minute left! Hurry up!");
+                }
+
+                // Handle expiration
+                if (distance < 0) {
+                    clearInterval(x);
+                    timerElement.innerHTML = "EXPIRED";
+                    timerElement.style.color = 'black';
+                    alert("Time's up! Submitting your quiz.");
+                    document.forms[0].submit();
+                }
+            }, 1000);
+        });
+    </script>
+}
+
+
